@@ -13,16 +13,50 @@ export default function NewMemo() {
   const [ categories, setCategories] = useState([]);
   const [ category_id, setCategoryId ] = useState('');
   const [ memo, setMemo ] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [ userName, setUserName ] = useState('');
+  const [ isLoading, setIsLoading ] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
+    fetchGetUserName();
     fetchGetCategory();
   }, [])
 
+  async function fetchGetUserName() {
+    try {
+      const res = await axios.get("http://localhost:3010/api/v1/users/user_name", {
+        headers: {
+          'access-token': localStorage.getItem('access-token'),
+          'client': localStorage.getItem('client'),
+          'uid': localStorage.getItem('uid'),
+        }
+      });
+
+      if (!res.status || (res.status < 200 && res.status >= 300)) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      setUserName(res.data.name);
+    }
+    catch (error) {
+      console.error('Error creating credos:', error);
+      toast({
+        title: 'ユーザー名の取得に失敗しました。',
+        status: 'error',
+        isClosable: true,
+      });
+    }
+  }
+
   async function fetchGetCategory() {
     try {
-      const res = await axios.get("http://localhost:3010/api/v1/categories");
+      const res = await axios.get("http://localhost:3010/api/v1/categories", {
+        headers: {
+          'access-token': localStorage.getItem('access-token'),
+          'client': localStorage.getItem('client'),
+          'uid': localStorage.getItem('uid'),
+        }
+      });
 
       if (!res.status || (res.status < 200 && res.status >= 300)) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -58,8 +92,14 @@ export default function NewMemo() {
         memo: {
           content: memo,
           category_id
-        },
-      });
+        }},
+        {
+          headers: {
+            'access-token': localStorage.getItem('access-token'),
+            'client': localStorage.getItem('client'),
+            'uid': localStorage.getItem('uid'),
+          }
+        });
 
       if (!res.status || (res.status < 200 && res.status >= 300)) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -88,7 +128,9 @@ export default function NewMemo() {
   return (
     <Center>
       <Box w={["100%", "90%", "80%", "70%", "60%"]} mt={["50px", "100px", "150px", "200px"]}>
+      {"ユーザ名 : "+userName}
         <Select
+          mt={6}
           onChange={(e) => setCategoryId(e.target.value)}
           placeholder='カテゴリを選択して下さい。'
         >
